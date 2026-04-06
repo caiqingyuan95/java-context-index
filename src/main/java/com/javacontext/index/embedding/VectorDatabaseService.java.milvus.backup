@@ -1,0 +1,527 @@
+package com.javacontext.index.embedding;
+
+import com.javacontext.index.config.AppProperties;
+import com.javacontext.index.model.CodeChunk;
+import com.javacontext.index.model.SearchResult;
+import io.milvus.client.MilvusServiceClient;
+import io.milvus.common.clientenum.ConsistencyLevelEnum;
+import io.milvus.param.ConnectParam;
+import io.milvus.param.IndexType;
+import io.milvus.param.MetricType;
+import io.milvus.param.collection.*;
+import io.milvus.param.dml.DeleteParam;
+import io.milvus.param.dml.InsertParam;
+import io.milvus.param.dml.SearchParam;
+import io.milvus.param.index.CreateIndexParam;
+import io.milvus.response.SearchResultsWrapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Milvus向量数据库适配器
+ * 
+ * 实现VectorDatabaseStrategy接口,提供Milvus-specific的实现
+ * 
+ * 统一接口:
+ * - initialize(): 初始化连接和集合
+ * - insertCodeChunks(): 批量插入代码块
+ * - search(): 向量相似度搜索
+ * - deleteByFilePath(): 根据文件路径删除
+ * - deleteByProjectKey(): 根据项目Key删除
+ */
+@Slf4j
+public class MilvusVectorDatabaseAdapter implements VectorDatabaseStrategy {
+
+    private final AppProperties properties;
+    private final EmbeddingService embeddingService;
+    private MilvusServiceClient milvusClient;
+    private String collectionName;
+
+    // 字段常量
+    private static final String FIELD_ID = "id";
+    private static final String FIELD_PROJECT_KEY = "project_key";
+    private static final String FIELD_PROJECT_NAME = "project_name";
+    private static final String FIELD_FILE_PATH = "file_path";
+    private static final String FIELD_CHUNK_TYPE = "chunk_type";
+    private static final String FIELD_NAME = "name";
+    private static final String FIELD_FQN = "fully_qualified_name";
+    private static final String FIELD_CODE = "code";
+    private static final String FIELD_SEMANTIC_TEXT = "semantic_text";
+    private static final String FIELD_DESCRIPTION = "description";
+    private static final String FIELD_PACKAGE_NAME = "package_name";
+    private static final String FIELD_START_LINE = "start_line";
+    private static final String FIELD_END_LINE = "end_line";
+    private static final String FIELD_VECTOR = "vector";
+
+    public MilvusVectorDatabaseAdapter(AppProperties properties, EmbeddingService embeddingService) {
+        this.properties = properties;
+        this.embeddingService = embeddingService;
+    }
+
+    @Override
+    public void initialize() {
+        AppProperties.MilvusConfig config = properties.getVectorDb().getMilvus();
+        this.collectionName = config.getCollectionName();
+
+        log.info("初始化Milvus向量数据库: {}:{}", config.getHost(), config.getPort());
+
+        // 创建连接
+        ConnectParam connectParam = ConnectParam.newBuilder()
+                .withHost(config.getHost())
+                .withPort(config.getPort())
+                .build();
+
+        milvusClient = new MilvusServiceClient(connectParam);
+
+        // 创建集合 (如果不存在)
+        createCollectionIfNotExists();
+
+        // 创建索引 (如果不存在)
+        createIndexIfNotExists();
+
+        log.info("Milvus向量数据库初始化完成, 集合: {}", collectionName);
+    }
+
+    @Override
+    public void close() {
+        if (milvusClient != null) {
+            milvusClient.close();
+            log.info("Milvus连接已关闭");
+        }
+    }
+
+    /**
+     * 创建集合 (如果不存在)
+     */
+    private void createCollectionIfNotExists() {
+        boolean exists = hasCollection(collectionName);
+        if (!exists) {
+            log.info("创建Milvus集合: {}", collectionName);
+
+            int dimension = embeddingService.getDimension();
+
+            // 创建集合
+            CreateCollectionParam param = CreateCollectionParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withShardsNum(2)
+                    .build();
+
+            milvusClient.createCollection(param);
+
+            // 添加字段
+            FieldType idField = FieldType.newBuilder()
+                    .withName(FIELD_ID)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(100)
+                    .withPrimaryKey(true)
+                    .withAutoID(false)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(idField)
+                    .build());
+
+            FieldType projectKeyField = FieldType.newBuilder()
+                    .withName(FIELD_PROJECT_KEY)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(500)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(projectKeyField)
+                    .build());
+
+            FieldType projectNameField = FieldType.newBuilder()
+                    .withName(FIELD_PROJECT_NAME)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(200)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(projectNameField)
+                    .build());
+
+            FieldType filePathField = FieldType.newBuilder()
+                    .withName(FIELD_FILE_PATH)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(500)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(filePathField)
+                    .build());
+
+            FieldType chunkTypeField = FieldType.newBuilder()
+                    .withName(FIELD_CHUNK_TYPE)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(50)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(chunkTypeField)
+                    .build());
+
+            FieldType nameField = FieldType.newBuilder()
+                    .withName(FIELD_NAME)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(200)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(nameField)
+                    .build());
+
+            FieldType fqnField = FieldType.newBuilder()
+                    .withName(FIELD_FQN)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(500)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(fqnField)
+                    .build());
+
+            FieldType codeField = FieldType.newBuilder()
+                    .withName(FIELD_CODE)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(65535)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(codeField)
+                    .build());
+
+            FieldType semanticTextField = FieldType.newBuilder()
+                    .withName(FIELD_SEMANTIC_TEXT)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(65535)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(semanticTextField)
+                    .build());
+
+            FieldType descriptionField = FieldType.newBuilder()
+                    .withName(FIELD_DESCRIPTION)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(65535)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(descriptionField)
+                    .build());
+
+            FieldType packageNameField = FieldType.newBuilder()
+                    .withName(FIELD_PACKAGE_NAME)
+                    .withDataType(io.milvus.param.DataType.VarChar)
+                    .withMaxLength(300)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(packageNameField)
+                    .build());
+
+            FieldType startLineField = FieldType.newBuilder()
+                    .withName(FIELD_START_LINE)
+                    .withDataType(io.milvus.param.DataType.Int32)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(startLineField)
+                    .build());
+
+            FieldType endLineField = FieldType.newBuilder()
+                    .withName(FIELD_END_LINE)
+                    .withDataType(io.milvus.param.DataType.Int32)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(endLineField)
+                    .build());
+
+            FieldType vectorField = FieldType.newBuilder()
+                    .withName(FIELD_VECTOR)
+                    .withDataType(io.milvus.param.DataType.FloatVector)
+                    .withDimension(dimension)
+                    .build();
+            milvusClient.createField(CreateFieldParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withFieldType(vectorField)
+                    .build());
+
+            // 加载集合到内存
+            milvusClient.loadCollection(LoadCollectionParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .build());
+        }
+    }
+
+    /**
+     * 创建向量索引 (如果不存在)
+     */
+    private void createIndexIfNotExists() {
+        AppProperties.MilvusConfig config = properties.getVectorDb().getMilvus();
+
+        IndexType indexType = IndexType.valueOf(config.getIndexType());
+        MetricType metricType = MetricType.valueOf(config.getMetricType());
+
+        // 创建向量索引
+        CreateIndexParam indexParam = CreateIndexParam.newBuilder()
+                .withCollectionName(collectionName)
+                .withFieldName(FIELD_VECTOR)
+                .withIndexType(indexType)
+                .withMetricType(metricType)
+                .withExtraParam("{\"nlist\":1024}")
+                .withSyncMode(Boolean.TRUE)
+                .build();
+
+        milvusClient.createIndex(indexParam);
+        log.info("创建向量索引: type={}, metric={}", indexType, metricType);
+    }
+
+    /**
+     * 检查集合是否存在
+     */
+    private boolean hasCollection(String collectionName) {
+        var response = milvusClient.hasCollection(
+                HasCollectionParam.newBuilder().withCollectionName(collectionName).build());
+        return response.getData();
+    }
+
+    /**
+     * 批量插入代码块
+     *
+     * @param chunks 代码块列表
+     * @return 插入成功的代码块ID列表
+     */
+    public List<String> insertCodeChunks(List<CodeChunk> chunks) {
+        if (chunks == null || chunks.isEmpty()) {
+            return List.of();
+        }
+
+        log.info("开始插入 {} 个代码块到向量数据库", chunks.size());
+
+        List<InsertParam.Field> fields = new ArrayList<>();
+        List<String> ids = new ArrayList<>();
+        List<String> projectKeys = new ArrayList<>();
+        List<String> projectNames = new ArrayList<>();
+        List<String> filePaths = new ArrayList<>();
+        List<String> chunkTypes = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        List<String> fqns = new ArrayList<>();
+        List<String> codes = new ArrayList<>();
+        List<String> semanticTexts = new ArrayList<>();
+        List<String> descriptions = new ArrayList<>();
+        List<String> packageNames = new ArrayList<>();
+        List<Integer> startLines = new ArrayList<>();
+        List<Integer> endLines = new ArrayList<>();
+        List<List<Float>> vectors = new ArrayList<>();
+
+        for (CodeChunk chunk : chunks) {
+            ids.add(chunk.getId());
+            projectKeys.add(chunk.getProjectKey() != null ? chunk.getProjectKey() : "");
+            projectNames.add(chunk.getProjectName() != null ? chunk.getProjectName() : "");
+            filePaths.add(chunk.getFilePath() != null ? chunk.getFilePath() : "");
+            chunkTypes.add(chunk.getChunkType() != null ? chunk.getChunkType().name() : "");
+            names.add(chunk.getName() != null ? chunk.getName() : "");
+            fqns.add(chunk.getFullyQualifiedName() != null ? chunk.getFullyQualifiedName() : "");
+            codes.add(chunk.getCode() != null ? chunk.getCode() : "");
+            semanticTexts.add(chunk.getSemanticText() != null ? chunk.getSemanticText() : "");
+            descriptions.add(chunk.getDescription() != null ? chunk.getDescription() : "");
+            packageNames.add(chunk.getPackageName() != null ? chunk.getPackageName() : "");
+            startLines.add(chunk.getStartLine());
+            endLines.add(chunk.getEndLine());
+
+            // 向量化
+            float[] vector = embeddingService.embed(chunk.getSemanticText());
+            vectors.add(Arrays.stream(vector).mapToDouble(v -> v).map(f -> (float) f).toList());
+        }
+
+        fields.add(new InsertParam.Field(FIELD_ID, ids));
+        fields.add(new InsertParam.Field(FIELD_PROJECT_KEY, projectKeys));
+        fields.add(new InsertParam.Field(FIELD_PROJECT_NAME, projectNames));
+        fields.add(new InsertParam.Field(FIELD_FILE_PATH, filePaths));
+        fields.add(new InsertParam.Field(FIELD_CHUNK_TYPE, chunkTypes));
+        fields.add(new InsertParam.Field(FIELD_NAME, names));
+        fields.add(new InsertParam.Field(FIELD_FQN, fqns));
+        fields.add(new InsertParam.Field(FIELD_CODE, codes));
+        fields.add(new InsertParam.Field(FIELD_SEMANTIC_TEXT, semanticTexts));
+        fields.add(new InsertParam.Field(FIELD_DESCRIPTION, descriptions));
+        fields.add(new InsertParam.Field(FIELD_PACKAGE_NAME, packageNames));
+        fields.add(new InsertParam.Field(FIELD_START_LINE, startLines));
+        fields.add(new InsertParam.Field(FIELD_END_LINE, endLines));
+        fields.add(new InsertParam.Field(FIELD_VECTOR, vectors));
+
+        InsertParam insertParam = InsertParam.newBuilder()
+                .withCollectionName(collectionName)
+                .withFields(fields)
+                .build();
+
+        var response = milvusClient.insert(insertParam);
+        if (response.getStatus() != io.milvus.param.RpcStatus.SUCCESS) {
+            throw new RuntimeException("插入向量数据库失败: " + response.getMessage());
+        }
+
+        log.info("成功插入 {} 个代码块", chunks.size());
+        return ids;
+    }
+
+    /**
+     * 向量相似度搜索
+     *
+     * @param queryVector 查询向量
+     * @param projectKey  项目Key (过滤)
+     * @param topK        返回结果数
+     * @return 搜索结果列表
+     */
+    public List<SearchResult> search(float[] queryVector, String projectKey, int topK) {
+        List<String> searchVectors = Collections.singletonList(
+                Arrays.stream(queryVector).mapToObj(Float::toString).collect(Collectors.joining(",")));
+
+        SearchParam searchParam = SearchParam.newBuilder()
+                .withCollectionName(collectionName)
+                .withMetricType(MetricType.COSINE)
+                .withOutFields(Arrays.asList(
+                        FIELD_ID, FIELD_PROJECT_KEY, FIELD_PROJECT_NAME, FIELD_FILE_PATH,
+                        FIELD_CHUNK_TYPE, FIELD_NAME, FIELD_FQN, FIELD_CODE,
+                        FIELD_SEMANTIC_TEXT, FIELD_DESCRIPTION, FIELD_PACKAGE_NAME,
+                        FIELD_START_LINE, FIELD_END_LINE))
+                .withVectorFieldName(FIELD_VECTOR)
+                .withVectors(List.of(Arrays.stream(queryVector)
+                        .mapToDouble(v -> v).map(f -> (float) f).toList()))
+                .withTopK(topK)
+                .withConsistencyLevel(ConsistencyLevelEnum.STRONG)
+                .build();
+
+        // 如果有projectKey,添加过滤表达式
+        if (projectKey != null && !projectKey.isEmpty()) {
+            searchParam.setExpr(FIELD_PROJECT_KEY + " == \"" + projectKey + "\"");
+        }
+
+        var response = milvusClient.search(searchParam);
+        if (response.getStatus() != io.milvus.param.RpcStatus.SUCCESS) {
+            throw new RuntimeException("搜索失败: " + response.getMessage());
+        }
+
+        return parseSearchResults(response.getData());
+    }
+
+    /**
+     * 解析搜索结果
+     */
+    private List<SearchResult> parseSearchResults(List<io.milvus.response.QueryResultsWrapper.RowRecord> records) {
+        List<SearchResult> results = new ArrayList<>();
+
+        for (var record : records) {
+            SearchResult result = SearchResult.builder()
+                    .chunkId(getStringValue(record, FIELD_ID))
+                    .projectKey(getStringValue(record, FIELD_PROJECT_KEY))
+                    .projectName(getStringValue(record, FIELD_PROJECT_NAME))
+                    .filePath(getStringValue(record, FIELD_FILE_PATH))
+                    .chunkType(CodeChunk.ChunkType.valueOf(
+                            getStringValue(record, FIELD_CHUNK_TYPE)))
+                    .name(getStringValue(record, FIELD_NAME))
+                    .fullyQualifiedName(getStringValue(record, FIELD_FQN))
+                    .code(getStringValue(record, FIELD_CODE))
+                    .semanticText(getStringValue(record, FIELD_SEMANTIC_TEXT))
+                    .description(getStringValue(record, FIELD_DESCRIPTION))
+                    .packageName(getStringValue(record, FIELD_PACKAGE_NAME))
+                    .startLine(getIntValue(record, FIELD_START_LINE))
+                    .endLine(getIntValue(record, FIELD_END_LINE))
+                    .build();
+            results.add(result);
+        }
+
+        return results;
+    }
+
+    private String getStringValue(var record, String fieldName) {
+        Object value = record.get(fieldName);
+        return value != null ? value.toString() : "";
+    }
+
+    private int getIntValue(var record, String fieldName) {
+        Object value = record.get(fieldName);
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        return 0;
+    }
+
+    /**
+     * 根据文件路径删除代码块
+     *
+     * @param projectKey 项目Key
+     * @param filePath   文件路径
+     */
+    public void deleteByFilePath(String projectKey, String filePath) {
+        String expr = FIELD_PROJECT_KEY + " == \"" + projectKey + "\" && " +
+                FIELD_FILE_PATH + " == \"" + filePath + "\"";
+
+        var response = milvusClient.delete(DeleteParam.newBuilder()
+                .withCollectionName(collectionName)
+                .withExpr(expr)
+                .build());
+
+        if (response.getStatus() != io.milvus.param.RpcStatus.SUCCESS) {
+            log.error("删除文件索引失败: {}", response.getMessage());
+        } else {
+            log.info("删除文件索引: {}", filePath);
+        }
+    }
+
+    /**
+     * 根据项目Key删除所有代码块
+     *
+     * @param projectKey 项目Key
+     */
+    public void deleteByProjectKey(String projectKey) {
+        String expr = FIELD_PROJECT_KEY + " == \"" + projectKey + "\"";
+
+        var response = milvusClient.delete(DeleteParam.newBuilder()
+                .withCollectionName(collectionName)
+                .withExpr(expr)
+                .build());
+
+        if (response.getStatus() != io.milvus.param.RpcStatus.SUCCESS) {
+            log.error("删除项目索引失败: {}", response.getMessage());
+        } else {
+            log.info("删除项目索引: {}", projectKey);
+        }
+    }
+
+    /**
+     * 根据代码块ID列表删除
+     */
+    public void deleteByChunkIds(List<String> chunkIds) {
+        if (chunkIds == null || chunkIds.isEmpty()) {
+            return;
+        }
+
+        String idsStr = chunkIds.stream()
+                .map(id -> "\"" + id + "\"")
+                .collect(Collectors.joining(", "));
+        String expr = FIELD_ID + " in [" + idsStr + "]";
+
+        var response = milvusClient.delete(DeleteParam.newBuilder()
+                .withCollectionName(collectionName)
+                .withExpr(expr)
+                .build());
+
+        if (response.getStatus() != io.milvus.param.RpcStatus.SUCCESS) {
+            log.error("删除代码块失败: {}", response.getMessage());
+        } else {
+            log.info("删除 {} 个代码块", chunkIds.size());
+        }
+    }
+
+    @Override
+    public String getDbType() {
+        return "milvus";
+    }
+}

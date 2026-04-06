@@ -1,0 +1,448 @@
+{
+  "groups": [
+    {
+      "name": "graph-db.neo4j",
+      "type": "com.javacontext.index.config.Neo4jConfig",
+      "sourceType": "com.javacontext.index.config.Neo4jConfig"
+    },
+    {
+      "name": "java-context-index",
+      "type": "com.javacontext.index.config.AppProperties",
+      "sourceType": "com.javacontext.index.config.AppProperties"
+    },
+    {
+      "name": "java-context-index.change-detection",
+      "type": "com.javacontext.index.config.AppProperties$ChangeDetectionConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties"
+    },
+    {
+      "name": "java-context-index.embedding",
+      "type": "com.javacontext.index.config.AppProperties$EmbeddingConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties"
+    },
+    {
+      "name": "java-context-index.embedding.doubao",
+      "type": "com.javacontext.index.config.AppProperties$DoubaoConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$EmbeddingConfig"
+    },
+    {
+      "name": "java-context-index.embedding.ollama",
+      "type": "com.javacontext.index.config.AppProperties$OllamaConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$EmbeddingConfig"
+    },
+    {
+      "name": "java-context-index.embedding.openai",
+      "type": "com.javacontext.index.config.AppProperties$OpenaiConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$EmbeddingConfig"
+    },
+    {
+      "name": "java-context-index.mcp",
+      "type": "com.javacontext.index.config.AppProperties$McpConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties"
+    },
+    {
+      "name": "java-context-index.project",
+      "type": "com.javacontext.index.config.AppProperties$ProjectScanConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties"
+    },
+    {
+      "name": "java-context-index.search",
+      "type": "com.javacontext.index.config.AppProperties$SearchConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties"
+    },
+    {
+      "name": "java-context-index.semantic-text",
+      "type": "com.javacontext.index.config.AppProperties$SemanticTextConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties"
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary",
+      "type": "com.javacontext.index.config.AppProperties$LogicSummaryConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$SemanticTextConfig"
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.generation",
+      "type": "com.javacontext.index.config.AppProperties$GenerationConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$LogicSummaryConfig"
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.ollama",
+      "type": "com.javacontext.index.config.AppProperties$OllamaSummaryConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$LogicSummaryConfig"
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.trigger-condition",
+      "type": "com.javacontext.index.config.AppProperties$TriggerConditionConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$LogicSummaryConfig"
+    },
+    {
+      "name": "java-context-index.storage",
+      "type": "com.javacontext.index.config.AppProperties$StorageConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties"
+    },
+    {
+      "name": "java-context-index.vector-db",
+      "type": "com.javacontext.index.config.AppProperties$VectorDbConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties"
+    },
+    {
+      "name": "java-context-index.vector-db.chromadb",
+      "type": "com.javacontext.index.config.AppProperties$ChromadbConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$VectorDbConfig"
+    },
+    {
+      "name": "java-context-index.vector-db.milvus",
+      "type": "com.javacontext.index.config.AppProperties$MilvusConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$VectorDbConfig"
+    },
+    {
+      "name": "java-context-index.vector-db.typesense",
+      "type": "com.javacontext.index.config.AppProperties$TypesenseConfig",
+      "sourceType": "com.javacontext.index.config.AppProperties$VectorDbConfig"
+    }
+  ],
+  "properties": [
+    {
+      "name": "graph-db.neo4j.database",
+      "type": "java.lang.String",
+      "description": "数据库名称",
+      "sourceType": "com.javacontext.index.config.Neo4jConfig",
+      "defaultValue": "neo4j"
+    },
+    {
+      "name": "graph-db.neo4j.max-connection-pool-size",
+      "type": "java.lang.Integer",
+      "description": "连接池最大大小",
+      "sourceType": "com.javacontext.index.config.Neo4jConfig",
+      "defaultValue": 50
+    },
+    {
+      "name": "graph-db.neo4j.password",
+      "type": "java.lang.String",
+      "description": "密码",
+      "sourceType": "com.javacontext.index.config.Neo4jConfig",
+      "defaultValue": "password123"
+    },
+    {
+      "name": "graph-db.neo4j.uri",
+      "type": "java.lang.String",
+      "description": "Neo4j连接URI",
+      "sourceType": "com.javacontext.index.config.Neo4jConfig",
+      "defaultValue": "bolt:\/\/106.52.62.17:7687"
+    },
+    {
+      "name": "graph-db.neo4j.username",
+      "type": "java.lang.String",
+      "description": "用户名",
+      "sourceType": "com.javacontext.index.config.Neo4jConfig",
+      "defaultValue": "neo4j"
+    },
+    {
+      "name": "java-context-index.change-detection.auto-sync",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.javacontext.index.config.AppProperties$ChangeDetectionConfig",
+      "defaultValue": false
+    },
+    {
+      "name": "java-context-index.change-detection.enable-method-level",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.javacontext.index.config.AppProperties$ChangeDetectionConfig",
+      "defaultValue": false
+    },
+    {
+      "name": "java-context-index.change-detection.strategy",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$ChangeDetectionConfig",
+      "defaultValue": "git"
+    },
+    {
+      "name": "java-context-index.embedding.batch-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$EmbeddingConfig",
+      "defaultValue": 50
+    },
+    {
+      "name": "java-context-index.embedding.dimension",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$EmbeddingConfig",
+      "defaultValue": 4096
+    },
+    {
+      "name": "java-context-index.embedding.doubao.api-endpoint",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$DoubaoConfig"
+    },
+    {
+      "name": "java-context-index.embedding.doubao.api-key",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$DoubaoConfig"
+    },
+    {
+      "name": "java-context-index.embedding.doubao.connection-pool-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$DoubaoConfig",
+      "defaultValue": 10
+    },
+    {
+      "name": "java-context-index.embedding.doubao.model-name",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$DoubaoConfig",
+      "defaultValue": "text-embedding-large-3"
+    },
+    {
+      "name": "java-context-index.embedding.doubao.timeout",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$DoubaoConfig",
+      "defaultValue": 60
+    },
+    {
+      "name": "java-context-index.embedding.max-retries",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$EmbeddingConfig",
+      "defaultValue": 3
+    },
+    {
+      "name": "java-context-index.embedding.ollama.base-url",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$OllamaConfig",
+      "defaultValue": "http:\/\/localhost:11434"
+    },
+    {
+      "name": "java-context-index.embedding.ollama.model-name",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$OllamaConfig",
+      "defaultValue": "nomic-embed-text"
+    },
+    {
+      "name": "java-context-index.embedding.openai.api-key",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$OpenaiConfig"
+    },
+    {
+      "name": "java-context-index.embedding.openai.model-name",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$OpenaiConfig",
+      "defaultValue": "text-embedding-3-small"
+    },
+    {
+      "name": "java-context-index.embedding.provider",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$EmbeddingConfig",
+      "defaultValue": "doubao"
+    },
+    {
+      "name": "java-context-index.mcp.cors-enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.javacontext.index.config.AppProperties$McpConfig",
+      "defaultValue": true
+    },
+    {
+      "name": "java-context-index.mcp.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.javacontext.index.config.AppProperties$McpConfig",
+      "defaultValue": true
+    },
+    {
+      "name": "java-context-index.mcp.port",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$McpConfig",
+      "defaultValue": 8080
+    },
+    {
+      "name": "java-context-index.project.exclude-patterns",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.javacontext.index.config.AppProperties$ProjectScanConfig"
+    },
+    {
+      "name": "java-context-index.project.scan-paths",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.javacontext.index.config.AppProperties$ProjectScanConfig"
+    },
+    {
+      "name": "java-context-index.search.default-top-k",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$SearchConfig",
+      "defaultValue": 10
+    },
+    {
+      "name": "java-context-index.search.keyword-weight",
+      "type": "java.lang.Double",
+      "sourceType": "com.javacontext.index.config.AppProperties$SearchConfig",
+      "defaultValue": 0.3
+    },
+    {
+      "name": "java-context-index.search.max-top-k",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$SearchConfig",
+      "defaultValue": 50
+    },
+    {
+      "name": "java-context-index.search.min-score",
+      "type": "java.lang.Double",
+      "sourceType": "com.javacontext.index.config.AppProperties$SearchConfig",
+      "defaultValue": 0.5
+    },
+    {
+      "name": "java-context-index.search.semantic-weight",
+      "type": "java.lang.Double",
+      "sourceType": "com.javacontext.index.config.AppProperties$SearchConfig",
+      "defaultValue": 0.7
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.javacontext.index.config.AppProperties$LogicSummaryConfig",
+      "defaultValue": true
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.generation.max-code-lines",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$GenerationConfig",
+      "defaultValue": 500
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.generation.max-summary-length",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$GenerationConfig",
+      "defaultValue": 50
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.generation.timeout",
+      "type": "java.lang.Long",
+      "sourceType": "com.javacontext.index.config.AppProperties$GenerationConfig",
+      "defaultValue": 5000
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.model",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$LogicSummaryConfig",
+      "defaultValue": "qwen-1.5b-chat"
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.ollama.base-url",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$OllamaSummaryConfig",
+      "defaultValue": "http:\/\/localhost:11434"
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.ollama.model-name",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$OllamaSummaryConfig",
+      "defaultValue": "qwen:1.5b-chat"
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.provider",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$LogicSummaryConfig",
+      "defaultValue": "ollama"
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.trigger-condition.min-comment-length",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$TriggerConditionConfig",
+      "defaultValue": 20
+    },
+    {
+      "name": "java-context-index.semantic-text.logic-summary.trigger-condition.skip-if-has-javadoc",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.javacontext.index.config.AppProperties$TriggerConditionConfig",
+      "defaultValue": true
+    },
+    {
+      "name": "java-context-index.storage.base-dir",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$StorageConfig",
+      "defaultValue": "~\/.java-context-index"
+    },
+    {
+      "name": "java-context-index.storage.cache-dir",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$StorageConfig",
+      "defaultValue": "~\/.java-context-index\/cache"
+    },
+    {
+      "name": "java-context-index.storage.indices-dir",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$StorageConfig",
+      "defaultValue": "~\/.java-context-index\/indices"
+    },
+    {
+      "name": "java-context-index.storage.log-dir",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$StorageConfig",
+      "defaultValue": "~\/.java-context-index\/logs"
+    },
+    {
+      "name": "java-context-index.vector-db.chromadb.base-url",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$ChromadbConfig",
+      "defaultValue": "http:\/\/localhost:8000"
+    },
+    {
+      "name": "java-context-index.vector-db.chromadb.collection-name",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$ChromadbConfig",
+      "defaultValue": "java_code_index"
+    },
+    {
+      "name": "java-context-index.vector-db.milvus.collection-name",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$MilvusConfig",
+      "defaultValue": "java_code_index"
+    },
+    {
+      "name": "java-context-index.vector-db.milvus.host",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$MilvusConfig",
+      "defaultValue": "localhost"
+    },
+    {
+      "name": "java-context-index.vector-db.milvus.index-type",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$MilvusConfig",
+      "defaultValue": "IVF_FLAT"
+    },
+    {
+      "name": "java-context-index.vector-db.milvus.metric-type",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$MilvusConfig",
+      "defaultValue": "COSINE"
+    },
+    {
+      "name": "java-context-index.vector-db.milvus.port",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$MilvusConfig",
+      "defaultValue": 19530
+    },
+    {
+      "name": "java-context-index.vector-db.type",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$VectorDbConfig",
+      "defaultValue": "milvus"
+    },
+    {
+      "name": "java-context-index.vector-db.typesense.api-key",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$TypesenseConfig"
+    },
+    {
+      "name": "java-context-index.vector-db.typesense.collection-name",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$TypesenseConfig",
+      "defaultValue": "java_code_index"
+    },
+    {
+      "name": "java-context-index.vector-db.typesense.host",
+      "type": "java.lang.String",
+      "sourceType": "com.javacontext.index.config.AppProperties$TypesenseConfig",
+      "defaultValue": "localhost"
+    },
+    {
+      "name": "java-context-index.vector-db.typesense.port",
+      "type": "java.lang.Integer",
+      "sourceType": "com.javacontext.index.config.AppProperties$TypesenseConfig",
+      "defaultValue": 8108
+    }
+  ],
+  "hints": []
+}

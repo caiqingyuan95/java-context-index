@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试 - 调试用</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; background: #f5f5f5; }
+        .test-section { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #667eea; color: white; border: none; border-radius: 4px; font-size: 16px; }
+        button:hover { background: #5568d3; }
+        pre { background: #1f2937; color: #e5e7eb; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px; max-height: 500px; }
+        h2 { color: #333; margin-top: 0; }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .info { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Java Context Index API调试</h1>
+    
+    <div class="test-section">
+        <h2>1. 搜索API测试</h2>
+        <div>
+            <input type="text" id="searchQuery" value="订单" placeholder="搜索关键词" style="width: 300px; padding: 8px; font-size: 14px;">
+            <button onclick="testSearch()">🔍 搜索</button>
+        </div>
+        <div id="searchStatus" style="margin: 10px 0;"></div>
+        <pre id="searchResult">等待搜索...</pre>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 调用链API测试</h2>
+        <div>
+            <input type="text" id="methodId" placeholder="输入方法ID" style="width: 300px; padding: 8px; font-size: 14px;">
+            <button onclick="testCallChain()">🔗 查询调用链</button>
+        </div>
+        <div id="chainStatus" style="margin: 10px 0;"></div>
+        <pre id="callChainResult">等待查询...</pre>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+
+        async function testSearch() {
+            const query = document.getElementById('searchQuery').value;
+            const statusDiv = document.getElementById('searchStatus');
+            const resultDiv = document.getElementById('searchResult');
+            
+            statusDiv.innerHTML = '<span class="info">⏳ 搜索中...</span>';
+            resultDiv.textContent = '加载中...';
+
+            try {
+                console.log('发送搜索请求:', { query, projectKey: '', topK: 5 });
+                
+                const response = await fetch(`${API_BASE}/index/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        projectKey: '',
+                        topK: 5
+                    })
+                });
+
+                console.log('HTTP状态:', response.status);
+                
+                const result = await response.json();
+                console.log('API返回:', result);
+                console.log('结果数量:', result.results ? result.results.length : 'N/A');
+                
+                if (result.results && result.results.length > 0) {
+                    statusDiv.innerHTML = `<span class="success">✅ 成功！找到 ${result.results.length} 条结果</span>`;
+                    resultDiv.textContent = JSON.stringify(result, null, 2);
+                } else {
+                    statusDiv.innerHTML = '<span class="error">❌ 未找到结果</span>';
+                    resultDiv.textContent = JSON.stringify(result, null, 2);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<span class="error">❌ 请求失败</span>';
+                resultDiv.textContent = '错误: ' + error.message + '\n\n' + error.stack;
+                console.error('搜索错误:', error);
+            }
+        }
+
+        async function testCallChain() {
+            const methodId = document.getElementById('methodId').value;
+            if (!methodId) {
+                alert('请输入方法ID');
+                return;
+            }
+
+            const statusDiv = document.getElementById('chainStatus');
+            const resultDiv = document.getElementById('callChainResult');
+            statusDiv.innerHTML = '<span class="info">⏳ 查询中...</span>';
+            resultDiv.textContent = '加载中...';
+
+            try {
+                const url = `${API_BASE}/graph/call-chain/${methodId}?maxDepth=5`;
+                console.log('请求URL:', url);
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                console.log('调用链结果:', result);
+                
+                if (result.success && result.data && result.data.callChain) {
+                    statusDiv.innerHTML = `<span class="success">✅ 成功！找到 ${result.data.callChain.length} 个节点</span>`;
+                    resultDiv.textContent = JSON.stringify(result, null, 2);
+                } else {
+                    statusDiv.innerHTML = '<span class="error">❌ 未找到调用链</span>';
+                    resultDiv.textContent = JSON.stringify(result, null, 2);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<span class="error">❌ 查询失败</span>';
+                resultDiv.textContent = '错误: ' + error.message;
+                console.error('调用链错误:', error);
+            }
+        }
+
+        // 页面加载时自动测试一次
+        window.addEventListener('load', () => {
+            console.log('页面加载完成，API_BASE:', API_BASE);
+        });
+    </script>
+</body>
+</html>

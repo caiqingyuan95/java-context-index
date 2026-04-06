@@ -1,0 +1,144 @@
+# ==========================================
+# Java Context Index - 应用配置
+# ==========================================
+
+server:
+  port: 8080
+
+# ==========================================
+# 项目扫描配置
+# ==========================================
+java-context-index:
+  project:
+    scan-paths:
+      - src/main/java
+      - src/test/java
+    exclude-patterns:
+      - "**/target/**"
+      - "**/generated/**"
+      - "**/test/**"
+
+  # ==========================================
+  # 全局存储配置 (零Git污染)
+  # ==========================================
+  storage:
+    base-dir: ~/.java-context-index
+    indices-dir: ~/.java-context-index/indices
+    cache-dir: ~/.java-context-index/cache
+    log-dir: ~/.java-context-index/logs
+
+  # ==========================================
+  # Embedding 模型配置
+  # ==========================================
+  embedding:
+    provider: doubao  # doubao | openai | ollama
+    dimension: 2048  # 根据实际使用的模型调整: doubao-embedding-vision返回2048维
+    batch-size: 50
+    max-retries: 3
+
+    # 豆包配置 (推荐国内使用)
+    doubao:
+      api-key: c39f536a-e724-458f-8d49-2aff72d54597
+      model-name: ep-20260404183248-gq76t  # 实际返回2048维向量
+
+    # OpenAI配置
+    openai:
+      api-key: ${OPENAI_API_KEY:your-openai-api-key}
+      model-name: text-embedding-3-small
+
+    # Ollama本地配置
+    ollama:
+      base-url: http://localhost:11434
+      model-name: qwen3.5-q4:latest
+
+  # ==========================================
+  # 向量数据库配置
+  # ==========================================
+  vector-db:
+    type: milvus  # milvus | chromadb | typesense
+
+    # Milvus配置 (企业级,团队共享)
+    milvus:
+      host: 127.0.0.1
+      port: 19530
+      collection-name: java_code_index_v2  # 修改名称创建新集合（2048维）
+      index-type: IVF_FLAT
+      metric-type: COSINE
+
+    # ChromaDB配置 (轻量级,个人使用)
+    chromadb:
+      base-url: http://localhost:8000
+      collection-name: java_code_index
+
+    # TypeSense配置 (混合搜索)
+    typesense:
+      host: localhost
+      port: 8108
+      api-key: ${TYPESENSE_API_KEY:your-typesense-key}
+      collection-name: java_code_index
+
+  # ==========================================
+  # 图数据库配置 (Neo4j)
+  # ==========================================
+  graph-db:
+    neo4j:
+      uri: bolt://106.52.62.17:7687
+      username: neo4j
+      password: password123  # 修改为你的密码
+      database: neo4j
+      max-connection-pool-size: 50
+
+  # ==========================================
+  # 搜索配置
+  # ==========================================
+  search:
+    default-top-k: 10
+    max-top-k: 50
+    semantic-weight: 0.7
+    keyword-weight: 0.3
+    min-score: 0.5
+
+  # ==========================================
+  # 语义文本构建配置
+  # ==========================================
+  semantic-text:
+    logic-summary:
+      enabled: true
+      model: qwen3.5-q4
+      provider: ollama
+      trigger-condition:
+        min-comment-length: 20
+        skip-if-has-javadoc: true
+      generation:
+        max-summary-length: 50
+        max-code-lines: 500
+        timeout: 5000
+
+  # ==========================================
+  # 变更检测配置
+  # ==========================================
+  change-detection:
+    strategy: git
+    enable-method-level: false
+    auto-sync: false
+
+  # ==========================================
+  # MCP Server 配置
+  # ==========================================
+  mcp:
+    enabled: true
+    port: 8080
+    cors-enabled: true
+
+# ==========================================
+# 日志配置
+# ==========================================
+logging:
+  level:
+    root: INFO
+    com.javacontext.index: INFO
+  file:
+    name: ~/.java-context-index/logs/java-context-index.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

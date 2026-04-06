@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Context Index - 代码索引管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: #f3f4f6;
+            color: #6b7280;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e5e7eb;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .search-results {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .result-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .result-item h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .result-item .meta {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .result-item .code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        .result-item .score {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .call-chain {
+            margin-top: 20px;
+        }
+
+        .chain-node {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .chain-node .arrow {
+            color: #667eea;
+            font-size: 24px;
+            margin: 0 15px;
+        }
+
+        .chain-node .node-info {
+            flex: 1;
+        }
+
+        .chain-node .node-name {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        .chain-node .node-meta {
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .badge-method {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .badge-class {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge-interface {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .badge-constructor {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .badge-field {
+            background: #6b7280;
+            color: white;
+        }
+
+        .badge-enum {
+            background: #ec4899;
+            color: white;
+        }
+
+        .badge-annotation {
+            background: #14b8a6;
+            color: white;
+        }
+
+        .badge-controller {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge-service {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .badge-dao {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .badge-other {
+            background: #6b7280;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Java Context Index</h1>
+            <p>代码索引管理系统 - 智能代码搜索与调用链分析</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('index')">📊 索引管理</button>
+            <button class="tab" onclick="switchTab('search')">🔍 代码搜索</button>
+            <button class="tab" onclick="switchTab('chain')">🔗 调用链分析</button>
+        </div>
+
+        <div class="content">
+            <!-- 索引管理 -->
+            <div id="index-tab" class="tab-content active">
+                <h2 style="margin-bottom: 20px;">索引构建与进度</h2>
+                
+                <div class="form-group">
+                    <label>项目路径</label>
+                    <input type="text" id="projectPath" placeholder="例如: /path/to/your/java-project">
+                </div>
+
+                <div class="form-group">
+                    <label>项目Key（可选，默认自动检测）</label>
+                    <input type="text" id="projectKey" placeholder="例如: com.example:my-project:1.0.0">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="forceIndex"> 强制重建索引
+                    </label>
+                </div>
+
+                <button class="btn" onclick="buildIndex()">🚀 开始构建索引</button>
+
+                <div id="indexStatus"></div>
+
+                <div id="progressSection" style="display:none;">
+                    <h3 style="margin-top: 30px; margin-bottom: 15px;">构建进度</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar" style="width: 0%;">0%</div>
+                    </div>
+                    <div class="stats" id="progressStats"></div>
+                </div>
+
+                <div id="projectListSection" style="margin-top: 40px;">
+                    <h3 style="margin-bottom: 15px;">📋 已索引的项目</h3>
+                    <div id="projectList"></div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong>⚠️ 危险操作：</strong>
+                        <button class="btn btn-danger" onclick="dropCollection()" style="margin-left: 10px;">
+                            🗑️ 删除整个向量集合
+                        </button>
+                        <span style="margin-left: 10px; color: #856404; font-size: 12px;">
+                            这将删除所有项目的索引数据！
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 代码搜索 -->
+            <div id="search-tab" class="tab-content">
+                <h2 style="margin-bottom: 20px;">语义代码搜索</h2>
+                
+                <div class="form-group">
+                    <label>搜索查询</label>
+                    <textarea id="searchQuery" rows="3" placeholder="例如: 购买面单的实现流程、订单创建逻辑、支付处理方法..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>选择项目（从已索引项目中选择）</label>
+                    <select id="searchProjectKey">
+                        <option value="">全部项目</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>返回结果数</label>
+                    <select id="topK">
+                        <option value="5">5条</option>
+                        <option value="10" selected>10条</option>
+                        <option value="20">20条</option>
+                        <option value="50">50条</option>
+                    </select>
+                </div>
+
+                <button class="btn" onclick="searchCode()">🔍 开始搜索</button>
+
+                <div id="searchResults" class="search-results"></div>
+            </div>
+
+            <!-- 调用链分析 -->
+            <div id="chain-tab" class="tab-content">
+                <h2 style="margin-bottom: 20px;">方法调用链分析</h2>
+                
+                <div class="form-group">
+                    <label>方法全限定名（推荐）</label>
+                    <input type="text" id="methodFQN" placeholder="例如: com.wms.api.JfWmsClient#orderCreate 或 com.example.service.OrderService.createOrder">
+                </div>
+
+                <div class="form-group">
+                    <label>或方法ID（从搜索结果获取）</label>
+                    <input type="text" id="methodId" placeholder="例如: d7c1dda0-fac4-42d9-a231-5869c3bf0026">
+                </div>
+
+                <div class="form-group">
+                    <label>查询类型</label>
+                    <select id="queryType">
+                        <option value="call-chain">向下调用链（调用了谁）</option>
+                        <option value="callers">向上调用者（被谁调用）</option>
+                        <option value="business-flow">业务流程</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>最大深度（仅对调用链/调用者有效）</label>
+                    <input type="number" id="maxDepth" value="5" min="1" max="10">
+                </div>
+
+                <button class="btn" onclick="queryCallChain()">🔗 查询调用链</button>
+
+                <div id="chainResults" class="call-chain"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+
+        // 切换标签页
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        // 从搜索结果查看调用链
+        function viewCallChain(methodId) {
+            console.log('查看调用链:', methodId);
+            
+            // 切换到调用链标签页
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 激活第三个标签（调用链分析）
+            document.querySelectorAll('.tab')[2].classList.add('active');
+            document.getElementById('chain-tab').classList.add('active');
+            
+            // 清空FQN字段，填充methodId
+            document.getElementById('methodFQN').value = '';
+            document.getElementById('methodId').value = methodId;
+            
+            // 自动查询
+            queryCallChain();
+        }
+
+        // 加载已索引的项目列表
+        async function loadIndexedProjects() {
+            try {
+                const response = await fetch(`${API_BASE}/index/projects`);
+                const result = await response.json();
+                        
+                console.log('项目列表:', result);
+                        
+                if (result.success && result.data && result.data.projects) {
+                    const projects = result.data.projects;
+                            
+                    // 1. 填充搜索页面的项目选择框
+                    const searchSelect = document.getElementById('searchProjectKey');
+                    if (searchSelect) {
+                        searchSelect.innerHTML = '<option value="">全部项目</option>';
+                        projects.forEach(project => {
+                            const option = document.createElement('option');
+                            option.value = project;
+                            option.textContent = project;
+                            searchSelect.appendChild(option);
+                        });
+                    }
+                            
+                    // 2. 显示在索引管理页面的项目列表中
+                    const projectListDiv = document.getElementById('projectList');
+                    if (projectListDiv) {
+                        if (projects.length === 0) {
+                            projectListDiv.innerHTML = '<div style="color: #6b7280; text-align: center; padding: 20px;">暂无已索引的项目</div>';
+                        } else {
+                            projectListDiv.innerHTML = projects.map(project => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb;">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: #1f2937;">${project}</div>
+                                        <div style="font-size: 0.85em; color: #6b7280; margin-top: 4px;">
+                                            状态: <span style="color: #10b981;">✓ 已索引</span>
+                                        </div>
+                                    </div>
+                                    <button onclick="deleteProjectIndex('${project}')" 
+                                            style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                                        🗑️ 删除索引
+                                    </button>
+                                </div>
+                            `).join('');
+                        }
+                    }
+                            
+                    console.log(`已加载 ${projects.length} 个项目`);
+                }
+            } catch (error) {
+                console.error('加载项目列表失败:', error);
+            }
+        }
+        
+        // 删除项目索引
+        async function deleteProjectIndex(projectName) {
+            // 二次确认
+            const confirmed = confirm(`⚠️ 确定要删除项目 "${projectName}" 的索引吗？\n\n此操作不可恢复！`);
+                    
+            if (!confirmed) {
+                return;
+            }
+                    
+            try {
+                const response = await fetch(`${API_BASE}/index/delete/${encodeURIComponent(projectName)}`, {
+                    method: 'DELETE'
+                });
+                        
+                const result = await response.json();
+                        
+                if (result.success) {
+                    alert(`✅ 成功删除项目索引: ${projectName}\n删除记录数: ${result.deletedCount || 0}`);
+                    // 重新加载项目列表
+                    loadIndexedProjects();
+                } else {
+                    alert(`❌ 删除失败: ${result.message}`);
+                }
+            } catch (error) {
+                alert(`❌ 删除失败: ${error.message}`);
+                console.error('删除索引失败:', error);
+            }
+        }
+
+        // 删除整个向量集合
+        async function dropCollection() {
+            const collectionName = prompt('请输入要删除的集合名称：', 'java_code_index_v2');
+            
+            if (!collectionName) {
+                return;
+            }
+            
+            // 三次确认
+            const confirmed1 = confirm(`⚠️ 警告：即将删除集合 "${collectionName}"\n\n这将删除所有项目的索引数据！`);
+            if (!confirmed1) return;
+            
+            const confirmed2 = confirm(`⚠️ 最后确认：你真的要删除整个集合吗？\n\n此操作不可恢复！`);
+            if (!confirmed2) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/index/dropCollection/${encodeURIComponent(collectionName)}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`✅ 成功删除集合: ${collectionName}\n\n请重启服务后重新索引项目。`);
+                    // 刷新页面
+                    location.reload();
+                } else {
+                    alert(`❌ 删除失败: ${result.message}`);
+                }
+            } catch (error) {
+                alert(`❌ 删除失败: ${error.message}`);
+                console.error('删除集合失败:', error);
+            }
+        }
+
+        // 构建索引
+        async function buildIndex() {
+            const projectPath = document.getElementById('projectPath').value;
+            if (!projectPath) {
+                alert('请输入项目路径');
+                return;
+            }
+
+            const statusDiv = document.getElementById('indexStatus');
+            statusDiv.innerHTML = '<div class="loading">正在提交索引任务...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/index/build`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        projectPath: projectPath,
+                        projectKey: document.getElementById('projectKey').value,
+                        force: document.getElementById('forceIndex').checked
+                    })
+                });
+
+                const result = await response.json();
+                
+                console.log('索引构建响应:', result);
+                
+                if (result.success && result.taskId) {
+                    statusDiv.innerHTML = `<div class="success">✅ 索引任务已启动! Task ID: ${result.taskId}</div>`;
+                    
+                    // 显示进度区域
+                    const progressSection = document.getElementById('progressSection');
+                    if (progressSection) {
+                        progressSection.style.display = 'block';
+                        console.log('进度区域已显示');
+                    } else {
+                        console.error('未找到progressSection元素');
+                    }
+                    
+                    // 开始轮询进度
+                    pollProgress(result.taskId);
+                } else {
+                    statusDiv.innerHTML = `<div class="error">❌ ${result.message || '任务启动失败'}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">❌ 请求失败: ${error.message}</div>`;
+                console.error('构建索引失败:', error);
+            }
+        }
+
+        // 轮询进度
+        let progressInterval;
+        async function pollProgress(taskId) {
+            console.log('开始轮询进度, taskId:', taskId);
+            
+            progressInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/index/progress/${taskId}`);
+                    const result = await response.json();
+                    
+                    console.log('进度响应:', result);
+                    
+                    if (result.success) {
+                        const data = result.data;
+                        const progress = data.progress;
+                        
+                        document.getElementById('progressBar').style.width = `${progress.percentage}%`;
+                        document.getElementById('progressBar').textContent = `${progress.percentage.toFixed(1)}%`;
+                        
+                        document.getElementById('progressStats').innerHTML = `
+                            <div class="stat-card">
+                                <div class="value">${progress.processedFiles}/${progress.totalFiles}</div>
+                                <div class="label">文件进度</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value">${progress.generatedChunks}</div>
+                                <div class="label">生成代码块</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value">${progress.insertedVectors}</div>
+                                <div class="label">插入向量</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value">${data.timeStats.elapsedSeconds}s</div>
+                                <div class="label">已用时</div>
+                            </div>
+                        `;
+                        
+                        if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+                            clearInterval(progressInterval);
+                            document.getElementById('indexStatus').innerHTML = 
+                                `<div class="${data.status === 'COMPLETED' ? 'success' : 'error'}">
+                                    ${data.status === 'COMPLETED' ? '✅' : '❌'} 索引构建${data.status === 'COMPLETED' ? '完成' : '失败'}
+                                </div>`;
+                            console.log('索引构建完成，状态:', data.status);
+                        }
+                    }
+                } catch (error) {
+                    console.error('获取进度失败:', error);
+                }
+            }, 2000);
+        }
+
+        // 搜索代码
+        async function searchCode() {
+            const query = document.getElementById('searchQuery').value;
+            if (!query) {
+                alert('请输入搜索内容');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '<div class="loading">正在搜索...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/index/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        projectKey: document.getElementById('searchProjectKey').value,
+                        topK: parseInt(document.getElementById('topK').value)
+                    })
+                });
+
+                const result = await response.json();
+                
+                console.log('=== 搜索结果调试信息 ===');
+                console.log('完整响应:', JSON.stringify(result, null, 2));
+                console.log('结果数量:', result.results ? result.results.length : 0);
+                
+                if (result.results && result.results.length > 0) {
+                    console.log('第一个结果示例:', JSON.stringify(result.results[0], null, 2));
+                    console.log('packageName类型:', typeof result.results[0].packageName);
+                    console.log('packageName值:', result.results[0].packageName);
+                }
+                
+                // SearchResponse直接返回，没有success字段
+                if (result.results && result.results.length > 0) {
+                    resultsDiv.innerHTML = result.results.map((item, index) => {
+                        // 注意：后端返回的字段都是字符串类型，不是数组
+                        // 直接使用，不需要parseArray
+                        const fqn = item.fullyQualifiedName || '';
+                        const methodName = item.name || '';
+                        const packageName = item.packageName || 'N/A';
+                        const filePath = item.filePath || 'N/A';
+                        const code = item.code || '';
+                        const semanticText = item.semanticText || '';
+                        const description = item.description || '';
+                        const chunkType = item.chunkType || 'UNKNOWN';
+                        
+                        // 从FQN中提取类名
+                        let className = 'N/A';
+                        if (fqn && chunkType === 'METHOD') {
+                            // 方法: com.wms.api.JfWmsClient.orderGet -> JfWmsClient
+                            const parts = fqn.split('.');
+                            if (parts.length >= 2) {
+                                className = parts[parts.length - 2];
+                            }
+                        } else if (fqn && chunkType === 'FIELD') {
+                            // 字段: com.wms.api.auth.po.JfWmsAuthInfoVo.accessToken -> JfWmsAuthInfoVo
+                            const parts = fqn.split('.');
+                            if (parts.length >= 2) {
+                                className = parts[parts.length - 2];
+                            }
+                        } else if (fqn) {
+                            // 类: com.wms.api.JfWmsClient -> JfWmsClient
+                            const parts = fqn.split('.');
+                            className = parts[parts.length - 1];
+                        }
+                        
+                        // 提取方法名（如果是字段，显示为 类名.字段名）
+                        let displayName = methodName;
+                        if (chunkType === 'FIELD' && fqn) {
+                            const fqnParts = fqn.split('.');
+                            if (fqnParts.length >= 2) {
+                                displayName = `${fqnParts[fqnParts.length - 2]}.${methodName}`;
+                            }
+                        }
+                        
+                        return `
+                        <div class="result-item">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                <h3 style="margin: 0; flex: 1;">
+                                    <span style="color: #667eea;">${displayName || 'Unknown'}</span>
+                                    <span style="margin-left: 10px; font-size: 12px; color: #8b5cf6; background: #f3f4f6; padding: 2px 8px; border-radius: 4px;">${chunkType}</span>
+                                    <button onclick="viewCallChain('${item.chunkId}')" 
+                                            style="margin-left: 10px; padding: 5px 10px; font-size: 12px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                        🔗 调用链
+                                    </button>
+                                </h3>
+                                <span class="score" style="white-space: nowrap;">相似度: ${(item.score * 100).toFixed(1)}%</span>
+                            </div>
+                            
+                            <div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-bottom: 10px; font-family: 'Courier New', monospace; font-size: 0.9em;">
+                                <div style="color: #6b7280; margin-bottom: 5px;">
+                                    <span style="color: #8b5cf6;">📦</span> <strong>包名:</strong> ${packageName}
+                                </div>
+                                <div style="color: #6b7280; margin-bottom: 5px;">
+                                    <span style="color: #3b82f6;">📝</span> <strong>类名:</strong> ${className}
+                                </div>
+                                <div style="color: #6b7280; margin-bottom: 5px;">
+                                    <span style="color: #10b981;">⚡</span> <strong>${chunkType === 'METHOD' ? '方法' : chunkType === 'FIELD' ? '字段' : '类型'}:</strong> ${methodName}
+                                </div>
+                                <div style="color: #6b7280;">
+                                    <span style="color: #f59e0b;">📍</span> <strong>位置:</strong> ${filePath !== 'N/A' ? filePath.split(/[\\/]/).pop() : 'N/A'}:${item.startLine || 0}-${item.endLine || 0}
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                                <span class="badge badge-${(item.chunkType || 'CLASS').toLowerCase()}">${item.chunkType || 'CLASS'}</span>
+                                ${description && description !== 'N/A' ? `<span style="color: #4b5563; font-size: 0.9em;">💬 ${description}</span>` : ''}
+                            </div>
+                            
+                            ${fqn ? `<div style="margin-bottom: 8px; color: #6b7280; font-size: 0.85em; word-break: break-all;">
+                                <strong>FQN:</strong> ${fqn}
+                            </div>` : ''}
+                            
+                            ${code ? `<details style="margin-top: 10px;"><summary style="cursor: pointer; color: #667eea; font-weight: 600;">📄 查看代码</summary><div class="code" style="margin-top: 8px;">${code.substring(0, 800)}${code.length > 800 ? '...' : ''}</div></details>` : ''}
+                            ${semanticText ? `<details style="margin-top: 8px;"><summary style="cursor: pointer; color: #6b7280; font-size: 0.9em;">🔍 语义文本</summary><div style="margin-top: 8px; padding: 10px; background: #f3f4f6; border-radius: 6px; font-size: 0.85em; color: #6b7280; max-height: 150px; overflow-y: auto;">${semanticText.substring(0, 500)}</div></details>` : ''}
+                        </div>
+                    `}).join('');
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">未找到相关结果</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ 搜索失败: ${error.message}</div>`;
+                console.error('搜索错误:', error);
+            }
+        }
+
+        // 查询调用链
+        async function queryCallChain() {
+            const methodFQN = document.getElementById('methodFQN').value.trim();
+            const methodId = document.getElementById('methodId').value.trim();
+            
+            if (!methodFQN && !methodId) {
+                alert('请输入方法全限定名或方法ID');
+                return;
+            }
+
+            const queryType = document.getElementById('queryType').value;
+            const maxDepth = document.getElementById('maxDepth').value;
+            const resultsDiv = document.getElementById('chainResults');
+            resultsDiv.innerHTML = '<div class="loading">正在查询...</div>';
+
+            try {
+                let url;
+                
+                // 优先使用FQN查询
+                if (methodFQN) {
+                    if (queryType === 'call-chain') {
+                        url = `${API_BASE}/graph/call-chain-by-fqn?fqn=${encodeURIComponent(methodFQN)}&maxDepth=${maxDepth}`;
+                    } else if (queryType === 'callers') {
+                        // 注意：调用者查询需要先通过FQN找到methodId，这里简化处理
+                        alert('调用者查询暂不支持FQN，请先通过搜索获取方法ID');
+                        resultsDiv.innerHTML = '';
+                        return;
+                    } else {
+                        url = `${API_BASE}/graph/business-flow/${encodeURIComponent(methodFQN)}`;
+                    }
+                } else {
+                    // 使用methodId查询
+                    if (queryType === 'call-chain') {
+                        url = `${API_BASE}/graph/call-chain/${methodId}?maxDepth=${maxDepth}`;
+                    } else if (queryType === 'callers') {
+                        url = `${API_BASE}/graph/callers/${methodId}?maxDepth=${maxDepth}`;
+                    } else {
+                        url = `${API_BASE}/graph/business-flow/${methodId}`;
+                    }
+                }
+
+                console.log('请求URL:', url); // 调试日志
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                console.log('调用链结果:', result); // 调试日志
+                
+                if (result.success && result.data && result.data.callChain && result.data.callChain.length > 0) {
+                    const chain = result.data.callChain;
+                    const queryInfo = methodFQN ? `方法: ${methodFQN}` : `ID: ${methodId}`;
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ 找到 ${chain.length} 个节点 (${queryInfo})</div>
+                        <div class="chain-node">
+                            ${chain.map((node, index) => `
+                                ${index > 0 ? '<div class="arrow">↓</div>' : ''}
+                                <div class="chain-node">
+                                    <div class="node-info">
+                                        <div class="node-name">${node.name || 'Unknown'}</div>
+                                        <div class="node-meta">
+                                            <span class="badge badge-${(node.layer || 'OTHER').toLowerCase()}">${node.layer || 'OTHER'}</span>
+                                            ${node.fullyQualifiedName || ''}
+                                            ${node.description ? `<br><em>${node.description}</em>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">未找到调用链信息，请检查方法名是否正确或Neo4j中是否有数据</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ 查询失败: ${error.message}</div>`;
+                console.error('调用链查询错误:', error);
+            }
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载已索引的项目列表
+            loadIndexedProjects();
+        });
+    </script>
+</body>
+</html>
